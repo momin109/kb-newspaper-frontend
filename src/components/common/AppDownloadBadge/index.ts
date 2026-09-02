@@ -1,0 +1,1 @@
+export { AppDownloadBadge } from './AppDownloadBadge'
