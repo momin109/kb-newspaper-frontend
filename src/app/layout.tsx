@@ -5,6 +5,7 @@ import { Providers } from "@/components/Providers";
 import AuthProvider from "@/features/auth/components/AuthProvider";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import QueryProvider from "@/components/QueryProvider";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -28,7 +29,9 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <Providers>
-          <AuthProvider>{children}</AuthProvider>
+          <QueryProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </QueryProvider>
         </Providers>
       </body>
     </html>

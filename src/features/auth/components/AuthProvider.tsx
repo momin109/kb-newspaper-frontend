@@ -21,25 +21,32 @@ export default function AuthProvider({
 
   useEffect(() => {
     const initializeAuth = async () => {
+      const token = localStorage.getItem(TOKEN_KEY);
+
+      if (!token) {
+        dispatch(logout());
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const token = localStorage.getItem(TOKEN_KEY);
+        // Validate token with backend
+        const response = await authService.getMe(token);
 
-        if (!token) {
-          setIsLoading(false);
-          return;
-        }
+        const user = response.data;
 
-        const response = await authService.getMe();
+        // Save latest user
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
 
+        // Restore Redux state
         dispatch(
           setCredentials({
             token,
-            user: response.data,
+            user,
           }),
         );
-
-        localStorage.setItem(USER_KEY, JSON.stringify(response.data));
-      } catch {
+      } catch (error) {
+        // Token invalid / expired
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
 
@@ -52,6 +59,7 @@ export default function AuthProvider({
     initializeAuth();
   }, [dispatch]);
 
+  // Don't render the application until auth initialization is finished
   if (isLoading) {
     return null;
   }

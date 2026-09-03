@@ -1,14 +1,14 @@
-import { apiGet } from '@/lib/api-fetch'
-import type { ApiEnvelope, ApiListEnvelope } from '@/types/api.types'
-import type { Article } from '../types/article.types'
-import { MOCK_ARTICLES, MOCK_ARTICLE_DETAIL } from './articles.mock'
+import { apiGet } from "@/lib/api-fetch";
+import type { ApiEnvelope, ApiListEnvelope } from "@/types/api.types";
+import type { Article } from "../types/article.types";
+import { MOCK_ARTICLES, MOCK_ARTICLE_DETAIL } from "./articles.mock";
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_API !== 'false'
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_API !== "false";
 
 export interface GetArticlesParams {
-  category?: string // category ObjectId, per article.controller.js's getArticles
-  search?: string
-  tag?: string
+  category?: string; // category ObjectId, per article.controller.js's getArticles
+  search?: string;
+  tag?: string;
 }
 
 /**
@@ -19,38 +19,45 @@ export interface GetArticlesParams {
  * a TODO for the backend team.
  */
 export async function getArticles(
-  params: GetArticlesParams & { limit?: number } = {}
+  params: GetArticlesParams & { limit?: number } = {},
 ): Promise<Article[]> {
   if (USE_MOCK) {
-    let items = [...MOCK_ARTICLES]
-    if (params.category) items = items.filter((a) => a.category?._id === params.category)
-    if (params.tag) items = items.filter((a) => a.tags.includes(params.tag!))
+    let items = [...MOCK_ARTICLES];
+    if (params.category)
+      items = items.filter((a) => a.category?._id === params.category);
+    if (params.tag) items = items.filter((a) => a.tags.includes(params.tag!));
     if (params.search) {
-      const q = params.search.toLowerCase()
-      items = items.filter((a) => a.title.toLowerCase().includes(q))
+      const q = params.search.toLowerCase();
+      items = items.filter((a) => a.title.toLowerCase().includes(q));
     }
-    items.sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''))
-    return params.limit ? items.slice(0, params.limit) : items
+    items.sort((a, b) =>
+      (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""),
+    );
+    return params.limit ? items.slice(0, params.limit) : items;
   }
 
-  const query = new URLSearchParams()
-  if (params.category) query.set('category', params.category)
-  if (params.search) query.set('search', params.search)
-  if (params.tag) query.set('tag', params.tag)
+  const query = new URLSearchParams();
+  if (params.category) query.set("category", params.category);
+  if (params.search) query.set("search", params.search);
+  if (params.tag) query.set("tag", params.tag);
 
   const res = await apiGet<ApiListEnvelope<Article>>(
-    `/article${query.toString() ? `?${query}` : ''}`,
-    { revalidate: 60 }
-  )
-  return params.limit ? res.data.slice(0, params.limit) : res.data
+    `/article${query.toString() ? `?${query}` : ""}`,
+    { revalidate: 60 },
+  );
+  return params.limit ? res.data.slice(0, params.limit) : res.data;
 }
 
 /** Maps to GET /api/article/:slug (increments the view count server-side). */
 export async function getArticleBySlug(
-  slug: string
-): Promise<{ status: 'ok'; article: Article } | { status: 'not_found' } | { status: 'premium_locked' }> {
+  slug: string,
+): Promise<
+  | { status: "ok"; article: Article }
+  | { status: "not_found" }
+  | { status: "premium_locked" }
+> {
   if (USE_MOCK) {
-    return { status: 'ok', article: { ...MOCK_ARTICLE_DETAIL, slug } }
+    return { status: "ok", article: { ...MOCK_ARTICLE_DETAIL, slug } };
   }
 
   // Raw fetch here (not apiGet) because this endpoint has meaningful
@@ -65,15 +72,19 @@ export async function getArticleBySlug(
   // the locked state for all readers, even logged-in ones. TODO once
   // the auth module is built: set an httpOnly cookie on login so this
   // Server Component can forward it.
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:5001/api'
-  const res = await fetch(`${API_BASE_URL}/article/${slug}`, { cache: 'no-store' })
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001/api";
+  const res = await fetch(`${API_BASE_URL}/article/${slug}`, {
+    cache: "no-store",
+  });
 
-  if (res.status === 404) return { status: 'not_found' }
-  if (res.status === 403) return { status: 'premium_locked' }
-  if (!res.ok) throw new Error(`API GET /article/${slug} failed: ${res.status}`)
+  if (res.status === 404) return { status: "not_found" };
+  if (res.status === 403) return { status: "premium_locked" };
+  if (!res.ok)
+    throw new Error(`API GET /article/${slug} failed: ${res.status}`);
 
-  const json = (await res.json()) as ApiEnvelope<Article>
-  return { status: 'ok', article: json.data }
+  const json = (await res.json()) as ApiEnvelope<Article>;
+  return { status: "ok", article: json.data };
 }
 
 /**
@@ -83,6 +94,91 @@ export async function getArticleBySlug(
  * up for public (non-admin) use, or add a public trending endpoint.
  */
 export async function getTrendingArticles(limit = 6): Promise<Article[]> {
-  const all = await getArticles({})
-  return [...all].sort((a, b) => b.views - a.views).slice(0, limit)
+  const all = await getArticles({});
+  return [...all].sort((a, b) => b.views - a.views).slice(0, limit);
 }
+
+// import { apiClient } from "@/lib/axios";
+
+// import type {
+//   AdminArticleListResponse,
+//   Article,
+//   ArticleStatus,
+//   ArticleStatusResponse,
+// } from "../types/article.types";
+
+// export const articleService = {
+//   /**
+//    * Admin: Get all articles
+//    *
+//    * GET /api/article/admin/all
+//    *
+//    * Access:
+//    * admin, editor
+//    */
+//   async getAdminArticles(
+//     status?: ArticleStatus,
+//   ): Promise<AdminArticleListResponse> {
+//     const response = await apiClient.get<AdminArticleListResponse>(
+//       "/article/admin/all",
+//       {
+//         params: status ? { status } : undefined,
+//       },
+//     );
+
+//     return response.data;
+//   },
+
+//   /**
+//    * Get single article
+//    *
+//    * GET /api/article/:slug
+//    */
+//   async getArticleBySlug(
+//     slug: string,
+//   ): Promise<{ success: boolean; data: Article }> {
+//     const response = await apiClient.get<{
+//       success: boolean;
+//       data: Article;
+//     }>(`/article/${slug}`);
+
+//     return response.data;
+//   },
+
+//   /**
+//    * Delete article
+//    *
+//    * DELETE /api/article/:id
+//    *
+//    * Admin only
+//    */
+//   async deleteArticle(
+//     id: string,
+//   ): Promise<{ success: boolean; message: string }> {
+//     const response = await apiClient.delete<{
+//       success: boolean;
+//       message: string;
+//     }>(`/article/${id}`);
+
+//     return response.data;
+//   },
+
+//   /**
+//    * Change article status
+//    *
+//    * PATCH /api/article/:id/status
+//    *
+//    * Admin / Editor
+//    */
+//   async updateArticleStatus(
+//     id: string,
+//     status: ArticleStatus,
+//   ): Promise<ArticleStatusResponse> {
+//     const response = await apiClient.patch<ArticleStatusResponse>(
+//       `/article/${id}/status`,
+//       { status },
+//     );
+
+//     return response.data;
+//   },
+// };

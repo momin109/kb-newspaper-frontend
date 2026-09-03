@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut,
   X,
+  History,
 } from "lucide-react";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -51,6 +52,16 @@ const menuItems = [
     title: "Newsletter",
     href: "/admin/newsletter",
     icon: Mail,
+  },
+  {
+    label: "Media",
+    href: "/admin/media",
+    icon: Mail,
+  },
+  {
+    label: "Activity Logs",
+    href: "/admin/activity-logs",
+    icon: History,
   },
 ];
 

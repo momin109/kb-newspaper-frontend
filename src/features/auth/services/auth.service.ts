@@ -28,8 +28,12 @@ export const authService = {
     return response.data;
   },
 
-  async getMe(): Promise<MeResponse> {
-    const response = await apiClient.get<MeResponse>("/profile/me");
+  async getMe(token: string): Promise<MeResponse> {
+    const response = await apiClient.get<MeResponse>("/profile/me", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     return response.data;
   },
