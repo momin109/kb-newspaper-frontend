@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { Category } from "@/features/categories/types/category.types";
 import {
@@ -15,6 +15,8 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState("");
+  const [parent, setParent] = useState<string | null>(null);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -36,16 +38,29 @@ export default function CategoriesPage() {
     loadCategories();
   }, []);
 
+  /**
+   * Only top-level categories can be selected
+   * as a parent.
+   */
+  const parentCategories = useMemo(() => {
+    return categories.filter((category) => category.parent === null);
+  }, [categories]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!name.trim()) return;
+    const trimmedName = name.trim();
+
+    if (!trimmedName) return;
 
     try {
       setSaving(true);
 
       if (editingId) {
-        const updated = await updateCategory(editingId, name.trim());
+        const updated = await updateCategory(editingId, {
+          name: trimmedName,
+          parent,
+        });
 
         setCategories((prev) =>
           prev.map((category) =>
@@ -53,12 +68,16 @@ export default function CategoriesPage() {
           ),
         );
       } else {
-        const created = await createCategory(name.trim());
+        const created = await createCategory({
+          name: trimmedName,
+          parent,
+        });
 
         setCategories((prev) => [created, ...prev]);
       }
 
       setName("");
+      setParent(null);
       setEditingId(null);
     } catch (error) {
       console.error("Category save failed:", error);
@@ -70,11 +89,13 @@ export default function CategoriesPage() {
   function handleEdit(category: Category) {
     setEditingId(category._id);
     setName(category.name);
+    setParent(category.parent);
   }
 
   function handleCancelEdit() {
     setEditingId(null);
     setName("");
+    setParent(null);
   }
 
   async function handleDelete(id: string) {
@@ -98,7 +119,7 @@ export default function CategoriesPage() {
         <h1 className="text-2xl font-bold">Categories</h1>
 
         <p className="text-sm text-muted-foreground">
-          Manage your news categories
+          Manage your news categories and sub-categories
         </p>
       </div>
 
@@ -110,24 +131,44 @@ export default function CategoriesPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col gap-3 sm:flex-row"
+          className="grid gap-3 sm:grid-cols-[1fr_220px_auto_auto]"
         >
+          {/* Name */}
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Category name"
-            className="flex-1 rounded-md border px-3 py-2 outline-none"
+            className="rounded-md border px-3 py-2 outline-none focus:ring-2 focus:ring-primary/20"
           />
 
+          {/* Parent */}
+          <select
+            value={parent ?? ""}
+            onChange={(e) => setParent(e.target.value || null)}
+            className="rounded-md border bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-primary/20"
+          >
+            <option value="">No Parent</option>
+
+            {parentCategories
+              .filter((category) => category._id !== editingId)
+              .map((category) => (
+                <option key={category._id} value={category._id}>
+                  {category.name}
+                </option>
+              ))}
+          </select>
+
+          {/* Submit */}
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !name.trim()}
             className="rounded-md bg-primary px-5 py-2 text-primary-foreground disabled:opacity-50"
           >
             {saving ? "Saving..." : editingId ? "Update" : "Add Category"}
           </button>
 
+          {/* Cancel */}
           {editingId && (
             <button
               type="button"
@@ -138,6 +179,11 @@ export default function CategoriesPage() {
             </button>
           )}
         </form>
+
+        {/* Helper text */}
+        <p className="mt-3 text-xs text-muted-foreground">
+          Select a parent category to create a sub-category.
+        </p>
       </div>
 
       {/* Table */}
@@ -146,8 +192,13 @@ export default function CategoriesPage() {
           <thead className="bg-muted/50">
             <tr>
               <th className="px-4 py-3 text-left">Name</th>
+
               <th className="px-4 py-3 text-left">Slug</th>
+
+              <th className="px-4 py-3 text-left">Parent</th>
+
               <th className="px-4 py-3 text-left">Featured</th>
+
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -155,51 +206,75 @@ export default function CategoriesPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center">
+                <td colSpan={5} className="px-4 py-8 text-center">
                   Loading...
                 </td>
               </tr>
             ) : categories.length === 0 ? (
               <tr>
                 <td
-                  colSpan={4}
+                  colSpan={5}
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
                   No categories found
                 </td>
               </tr>
             ) : (
-              categories.map((category) => (
-                <tr key={category._id} className="border-t">
-                  <td className="px-4 py-3 font-medium">{category.name}</td>
+              categories.map((category) => {
+                const parentCategory = categories.find(
+                  (item) => item._id === category.parent,
+                );
 
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {category.slug}
-                  </td>
+                const isSubCategory = category.parent !== null;
 
-                  <td className="px-4 py-3">
-                    {category.isFeatured ? "Yes" : "No"}
-                  </td>
+                return (
+                  <tr key={category._id} className="border-t">
+                    <td className="px-4 py-3 font-medium">
+                      <div className={isSubCategory ? "pl-6" : ""}>
+                        {isSubCategory && (
+                          <span className="mr-2 text-muted-foreground">└─</span>
+                        )}
 
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => handleEdit(category)}
-                        className="rounded-md border px-3 py-1.5 text-sm"
-                      >
-                        Edit
-                      </button>
+                        {category.name}
+                      </div>
+                    </td>
 
-                      <button
-                        onClick={() => handleDelete(category._id)}
-                        className="rounded-md border border-destructive px-3 py-1.5 text-sm text-destructive"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {category.slug}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      {parentCategory?.name ?? (
+                        <span className="text-muted-foreground">
+                          Main Category
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      {category.isFeatured ? "Yes" : "No"}
+                    </td>
+
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => handleEdit(category)}
+                          className="rounded-md border px-3 py-1.5 text-sm"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(category._id)}
+                          className="rounded-md border border-destructive px-3 py-1.5 text-sm text-destructive"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

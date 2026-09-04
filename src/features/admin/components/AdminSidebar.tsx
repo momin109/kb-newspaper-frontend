@@ -13,6 +13,10 @@ import {
   LogOut,
   X,
   History,
+  NewspaperIcon,
+  ImageIcon,
+  Mic,
+  BarChart3,
 } from "lucide-react";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -54,14 +58,34 @@ const menuItems = [
     icon: Mail,
   },
   {
-    label: "Media",
+    title: "Media",
     href: "/admin/media",
     icon: Mail,
   },
   {
-    label: "Activity Logs",
+    title: "Activity Logs",
     href: "/admin/activity-logs",
     icon: History,
+  },
+  {
+    title: "Live News",
+    href: "/admin/live-news",
+    icon: NewspaperIcon,
+  },
+  {
+    title: "Stories",
+    href: "/admin/stories",
+    icon: ImageIcon,
+  },
+  {
+    title: "Podcasts",
+    href: "/admin/podcast",
+    icon: Mic,
+  },
+  {
+    title: "Reports",
+    href: "/admin/reports",
+    icon: BarChart3,
   },
 ];
 
