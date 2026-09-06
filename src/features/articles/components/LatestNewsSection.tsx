@@ -1,71 +1,112 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
+import { NewsCard, NewsCardSkeleton } from "@/components/common/NewsCard";
+import { EmptyState } from "@/components/common/EmptyState";
+import { ErrorState } from "@/components/common/ErrorState";
+import { useArticlesClient } from "../hooks/useArticlesClient";
 
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
-import { NewsCard, NewsCardSkeleton } from '@/components/common/NewsCard'
-import { EmptyState } from '@/components/common/EmptyState'
-import { ErrorState } from '@/components/common/ErrorState'
-import { TrendingSidebar } from '@/features/trending/components/TrendingSidebar'
-import { useArticlesClient } from '../hooks/useArticlesClient'
-import type { Category } from '@/features/categories/types/category.types'
+export function LatestNewsSection() {
+  const latest = useArticlesClient({
+    limit: 5,
+    sort: "latest",
+  });
 
-interface LatestNewsSectionProps {
-  /** Categories to build tabs from (in addition to the always-present "সর্বশেষ" tab). */
-  tabCategories: Category[]
-}
-
-/** Client Component — tabbed সর্বশেষ/[categories] list next to the TrendingSidebar. */
-export function LatestNewsSection({ tabCategories }: LatestNewsSectionProps) {
-  const [tab, setTab] = useState('latest')
-  const activeCategoryId =
-    tab === 'latest' ? undefined : tabCategories.find((c) => c.slug === tab)?._id
-
-  const { articles, isLoading, isError, refetch } = useArticlesClient({
-    category: activeCategoryId,
-    limit: 7,
-  })
+  const popular = useArticlesClient({
+    limit: 5,
+    sort: "popular",
+  });
 
   return (
-    <section className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div className="lg:col-span-2">
-        <Tabs value={tab} onValueChange={setTab}>
-          <TabsList>
-            <TabsTrigger value="latest">সর্বশেষ</TabsTrigger>
-            {tabCategories.map((c) => (
-              <TabsTrigger key={c._id} value={c.slug}>
-                {c.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+    <section className="mt-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* =========================
+            সর্বশেষ সংবাদ
+        ========================== */}
+        <div className="lg:col-span-2 border border-border bg-card">
+          <div className="border-b border-border px-4 py-3">
+            <h2 className="text-lg font-bold">সর্বশেষ সংবাদ</h2>
+          </div>
 
-          <TabsContent value={tab}>
-            {isLoading ? (
-              <div className="divide-y divide-border">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="py-3">
-                    <NewsCardSkeleton />
-                  </div>
-                ))}
+          <div className="divide-y divide-border px-4">
+            {latest.isLoading ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="py-3">
+                  <NewsCardSkeleton />
+                </div>
+              ))
+            ) : latest.isError ? (
+              <div className="py-6">
+                <ErrorState onRetry={latest.refetch} />
               </div>
-            ) : isError ? (
-              <ErrorState onRetry={refetch} />
-            ) : articles.length === 0 ? (
-              <EmptyState message="এই বিভাগে কোনো সংবাদ পাওয়া যায়নি।" />
+            ) : latest.articles.length === 0 ? (
+              <div className="py-6">
+                <EmptyState message="কোনো সংবাদ পাওয়া যায়নি।" />
+              </div>
             ) : (
-              <div className="divide-y divide-border">
-                {articles.map((article) => (
-                  <div key={article._id} className="py-3 first:pt-0">
-                    <NewsCard article={article} variant="compact" />
-                  </div>
-                ))}
-              </div>
+              latest.articles.map((article) => (
+                <div key={article._id} className="py-3">
+                  <NewsCard
+                    article={article}
+                    variant="compact"
+                    showExcerpt={false}
+                  />
+                </div>
+              ))
             )}
-          </TabsContent>
-        </Tabs>
-      </div>
+          </div>
+        </div>
 
-      <TrendingSidebar />
+        {/* =========================
+            সর্বাধিক পঠিত
+        ========================== */}
+        <aside className="border border-border bg-card">
+          <div className="border-b border-border px-4 py-3">
+            <h2 className="text-lg font-bold">সর্বাধিক পঠিত</h2>
+          </div>
+
+          <div className="divide-y divide-border px-4">
+            {popular.isLoading ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="flex gap-3 py-4">
+                  <div className="h-8 w-8 shrink-0 animate-pulse rounded bg-muted" />
+
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-full animate-pulse rounded bg-muted" />
+                    <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+                  </div>
+                </div>
+              ))
+            ) : popular.isError ? (
+              <div className="py-6">
+                <ErrorState onRetry={popular.refetch} />
+              </div>
+            ) : popular.articles.length === 0 ? (
+              <div className="py-6">
+                <EmptyState message="কোনো জনপ্রিয় সংবাদ পাওয়া যায়নি।" />
+              </div>
+            ) : (
+              popular.articles.map((article, index) => (
+                <div key={article._id} className="flex gap-3 py-3">
+                  {/* Number */}
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center bg-primary text-sm font-bold text-primary-foreground">
+                    {index + 1}
+                  </div>
+
+                  {/* Article */}
+                  <div className="min-w-0 flex-1">
+                    <NewsCard
+                      article={article}
+                      variant="compact"
+                      showExcerpt={false}
+                      className="border-0 py-0"
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </aside>
+      </div>
     </section>
-  )
+  );
 }

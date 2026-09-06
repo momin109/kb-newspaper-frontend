@@ -21,11 +21,13 @@ interface CategoryTreeResponse {
 
 export interface CreateCategoryInput {
   name: string;
+  slug: string;
   parent?: string | null;
 }
 
 export interface UpdateCategoryInput {
   name: string;
+  slug: string;
   parent?: string | null;
 }
 
@@ -59,6 +61,7 @@ export async function createCategory(
     "/category-with-sub/create",
     {
       name: input.name,
+      slug: input.slug,
       parent: input.parent ?? null,
     },
   );
@@ -77,6 +80,7 @@ export async function updateCategory(
     `/category-with-sub/${id}`,
     {
       name: input.name,
+      slug: input.slug,
       parent: input.parent ?? null,
     },
   );

@@ -11,8 +11,8 @@ export function PremiumGate() {
       <p className="text-sm text-muted-foreground">
         পুরো প্রতিবেদনটি পড়তে অনুগ্রহ করে লগইন করুন অথবা সাবস্ক্রাইব করুন।
       </p>
-      <Button asChild>
-        <Link href="/login">লগইন করুন</Link>
+      <Button onClick={() => (window.location.href = "/login")}>
+        লগইন করুন
       </Button>
     </div>
   );

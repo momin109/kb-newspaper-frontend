@@ -475,42 +475,45 @@ export default function ArticleList() {
                       {/* Actions */}
                       <TableCell className="text-right">
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              disabled={changingStatusId === article._id}
-                            >
-                              {changingStatusId === article._id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <MoreHorizontal className="h-4 w-4" />
-                              )}
-
-                              <span className="sr-only">Open actions</span>
-                            </Button>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                disabled={changingStatusId === article._id}
+                              />
+                            }
+                          >
+                            {changingStatusId === article._id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <MoreHorizontal className="h-4 w-4" />
+                            )}
+                            <span className="sr-only">Open actions</span>
                           </DropdownMenuTrigger>
 
                           <DropdownMenuContent align="end" className="w-48">
                             {/* View */}
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href={`/article/${article.slug}`}
-                                target="_blank"
-                              >
-                                <Eye className="mr-2 h-4 w-4" />
-                                View Article
-                              </Link>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                window.open(
+                                  `/article/${article.slug}`,
+                                  "_blank",
+                                )
+                              }
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Article
                             </DropdownMenuItem>
 
                             {/* Edit */}
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href={`/admin/articles/${article._id}/edit`}
-                              >
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Edit Article
-                              </Link>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                (window.location.href = `/admin/articles/${article._id}/edit`)
+                              }
+                            >
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit Article
                             </DropdownMenuItem>
 
                             <DropdownMenuSeparator />

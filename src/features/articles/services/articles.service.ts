@@ -6,6 +6,7 @@ export interface GetArticlesParams {
   category?: string;
   search?: string;
   tag?: string;
+  sort?: "latest" | "popular" | "oldest";
 }
 
 interface GetArticlesResponse {
@@ -40,6 +41,10 @@ export async function getArticles(
 
   if (params.tag) {
     query.set("tag", params.tag);
+  }
+
+  if (params.sort) {
+    query.set("sort", params.sort);
   }
 
   const res = await apiGet<GetArticlesResponse>(

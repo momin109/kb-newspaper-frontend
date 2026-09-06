@@ -41,11 +41,13 @@ export function CommentForm({
     return (
       <div className="flex items-center justify-between gap-3 rounded-lg border border-dashed border-border bg-secondary/40 px-4 py-3">
         <p className="text-sm text-muted-foreground">মন্তব্য করতে লগইন করুন।</p>
-        <Button asChild size="sm" variant="outline">
-          <Link href="/login">
-            <LogIn className="h-4 w-4" />
-            লগইন
-          </Link>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => (window.location.href = "/login")}
+        >
+          <LogIn className="h-4 w-4" />
+          লগইন
         </Button>
       </div>
     );

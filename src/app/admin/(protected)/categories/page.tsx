@@ -15,6 +15,7 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
   const [parent, setParent] = useState<string | null>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -50,8 +51,17 @@ export default function CategoriesPage() {
     e.preventDefault();
 
     const trimmedName = name.trim();
+    const trimmedSlug = slug.trim().toLowerCase();
 
-    if (!trimmedName) return;
+    if (!trimmedName || !trimmedSlug) return;
+
+    // English slug validation
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(trimmedSlug)) {
+      alert(
+        "Slug must contain only English letters, numbers and hyphens.\nExample: entertainment",
+      );
+      return;
+    }
 
     try {
       setSaving(true);
@@ -59,6 +69,7 @@ export default function CategoriesPage() {
       if (editingId) {
         const updated = await updateCategory(editingId, {
           name: trimmedName,
+          slug: trimmedSlug,
           parent,
         });
 
@@ -70,6 +81,7 @@ export default function CategoriesPage() {
       } else {
         const created = await createCategory({
           name: trimmedName,
+          slug: trimmedSlug,
           parent,
         });
 
@@ -77,6 +89,7 @@ export default function CategoriesPage() {
       }
 
       setName("");
+      setSlug("");
       setParent(null);
       setEditingId(null);
     } catch (error) {
@@ -89,12 +102,14 @@ export default function CategoriesPage() {
   function handleEdit(category: Category) {
     setEditingId(category._id);
     setName(category.name);
+    setSlug(category.slug);
     setParent(category.parent);
   }
 
   function handleCancelEdit() {
     setEditingId(null);
     setName("");
+    setSlug("");
     setParent(null);
   }
 
@@ -131,7 +146,7 @@ export default function CategoriesPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="grid gap-3 sm:grid-cols-[1fr_220px_auto_auto]"
+          className="grid gap-3 sm:grid-cols-[1fr_1fr_220px_auto_auto]"
         >
           {/* Name */}
           <input
@@ -139,6 +154,22 @@ export default function CategoriesPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Category name"
+            className="rounded-md border px-3 py-2 outline-none focus:ring-2 focus:ring-primary/20"
+          />
+
+          {/* Slug */}
+          <input
+            type="text"
+            value={slug}
+            onChange={(e) =>
+              setSlug(
+                e.target.value
+                  .toLowerCase()
+                  .replace(/\s+/g, "-")
+                  .replace(/[^a-z0-9-]/g, ""),
+              )
+            }
+            placeholder="Slug (e.g. entertainment)"
             className="rounded-md border px-3 py-2 outline-none focus:ring-2 focus:ring-primary/20"
           />
 

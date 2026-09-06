@@ -390,11 +390,13 @@ export default function ArticleCreateForm() {
 
                 <Select
                   value={watch("category")}
-                  onValueChange={(value) =>
-                    setValue("category", value, {
-                      shouldValidate: true,
-                    })
-                  }
+                  onValueChange={(value) => {
+                    if (value) {
+                      setValue("category", value, {
+                        shouldValidate: true,
+                      });
+                    }
+                  }}
                   disabled={categoriesLoading || isSubmitting}
                 >
                   <SelectTrigger>
