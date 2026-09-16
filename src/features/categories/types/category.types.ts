@@ -7,8 +7,11 @@ export interface Category {
   isFeatured: boolean;
   createdAt: string;
   updatedAt: string;
+  children?: Category[];
 }
 
 export interface CategoryTree extends Category {
   children: CategoryTree[];
 }
+
+/** Matches kb-newspaper-server's Category model exactly (models/category.model.js). */

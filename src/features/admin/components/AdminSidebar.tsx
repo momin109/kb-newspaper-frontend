@@ -17,6 +17,7 @@ import {
   ImageIcon,
   Mic,
   BarChart3,
+  Settings2,
 } from "lucide-react";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -85,6 +86,11 @@ const menuItems = [
   {
     title: "Reports",
     href: "/admin/reports",
+    icon: BarChart3,
+  },
+  {
+    title: "Notifications",
+    href: "/admin/notifications",
     icon: BarChart3,
   },
 ];

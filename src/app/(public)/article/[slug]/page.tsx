@@ -16,24 +16,116 @@ interface ArticlePageProps {
   params: Promise<{ slug: string }>;
 }
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://provatbarta.com";
+
 export async function generateMetadata({
   params,
 }: ArticlePageProps): Promise<Metadata> {
   const { slug } = await params;
+
   const result = await getArticleBySlug(slug);
 
   if (result.status !== "ok") {
-    return { title: "সংবাদ পাওয়া যায়নি | প্রভাতবার্তা" };
+    return {
+      title: "সংবাদ পাওয়া যায়নি | প্রভাতবার্তা",
+      description: "প্রভাতবার্তায় প্রকাশিত সংবাদ খুঁজে দেখুন।",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
   }
 
   const { article } = result;
+
+  const title = article.title;
+
+  const description = getExcerpt(article.content, 160);
+
+  const articleUrl = `${SITE_URL}/article/${article.slug}`;
+
+  const imageUrl = article.thumbnail?.url || undefined;
+
   return {
-    title: `${article.title} | প্রভাতবার্তা`,
-    description: getExcerpt(article.content, 160),
+    title: `${title} | প্রভাতবার্তা`,
+
+    description,
+
+    keywords: article.tags || [],
+
+    authors: article.author
+      ? [
+          {
+            name: article.author.fullName || "প্রভাতবার্তা",
+          },
+        ]
+      : [{ name: "প্রভাতবার্তা" }],
+
+    alternates: {
+      canonical: articleUrl,
+    },
+
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
+    },
+
     openGraph: {
-      title: article.title,
-      description: getExcerpt(article.content, 160),
-      images: article.thumbnail ? [article.thumbnail.url] : [],
+      type: "article",
+
+      locale: "bn_BD",
+
+      url: articleUrl,
+
+      siteName: "প্রভাতবার্তা",
+
+      title,
+
+      description,
+
+      publishedTime: article.publishedAt
+        ? new Date(article.publishedAt).toISOString()
+        : undefined,
+
+      modifiedTime: article.updatedAt
+        ? new Date(article.updatedAt).toISOString()
+        : undefined,
+
+      authors: article.author
+        ? [article.author.fullName || "প্রভাতবার্তা"]
+        : ["প্রভাতবার্তা"],
+
+      section: article.category?.name || undefined,
+
+      tags: article.tags || [],
+
+      images: imageUrl
+        ? [
+            {
+              url: imageUrl,
+              width: 1200,
+              height: 630,
+              alt: title,
+            },
+          ]
+        : [],
+    },
+
+    twitter: {
+      card: "summary_large_image",
+
+      title,
+
+      description,
+
+      images: imageUrl ? [imageUrl] : [],
     },
   };
 }
