@@ -18,7 +18,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { openSearchOverlay } from "@/store/slices/uiSlice";
 import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 
-/** Client Component — dispatches Redux UI actions (search overlay) and reads auth state. */
+/** এই ব্লকটা sticky না — স্ক্রল করলে স্বাভাবিকভাবেই স্ক্রল হয়ে চলে যাবে, শুধু CategoryNavBar sticky থাকবে। */
 export function MainHeader() {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
@@ -34,7 +34,7 @@ export function MainHeader() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto max-w-7xl px-3 sm:px-4">
         {/* Top Row: Logo + Search/User */}
         <div className="flex h-16 items-center justify-between">
@@ -83,11 +83,8 @@ export function MainHeader() {
             </Button>
 
             {/* Notification */}
-            {/* IMPORTANT: NotificationBell already contains its own Button */}
             <div className="relative">
               <NotificationBell />
-
-              {/* Notification indicator */}
               <span className="pointer-events-none absolute right-1 top-1 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
             </div>
 
@@ -117,6 +114,6 @@ export function MainHeader() {
           </div>
         </div>
       </div>
-    </header>
+    </div>
   );
 }
