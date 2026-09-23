@@ -1,20 +1,20 @@
 "use client";
 
+import Link from "next/link";
+
 import { NewsCard, NewsCardSkeleton } from "@/components/common/NewsCard";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
 import { useArticlesClient } from "../hooks/useArticlesClient";
+import { usePopularArticlesClient } from "../hooks/usePopularArticles";
 
 export function LatestNewsSection() {
   const latest = useArticlesClient({
-    limit: 5,
+    limit: 8,
     sort: "latest",
   });
 
-  const popular = useArticlesClient({
-    limit: 5,
-    sort: "popular",
-  });
+  const popular = usePopularArticlesClient(5);
 
   return (
     <section className="mt-8">
@@ -23,13 +23,20 @@ export function LatestNewsSection() {
             সর্বশেষ সংবাদ
         ========================== */}
         <div className="lg:col-span-2 border border-border bg-card">
-          <div className="border-b border-border px-4 py-3">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <h2 className="text-lg font-bold">সর্বশেষ সংবাদ</h2>
+
+            <Link
+              href="/news"
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              সব দেখুন →
+            </Link>
           </div>
 
           <div className="divide-y divide-border px-4">
             {latest.isLoading ? (
-              Array.from({ length: 5 }).map((_, index) => (
+              Array.from({ length: 8 }).map((_, index) => (
                 <div key={index} className="py-3">
                   <NewsCardSkeleton />
                 </div>
@@ -43,7 +50,7 @@ export function LatestNewsSection() {
                 <EmptyState message="কোনো সংবাদ পাওয়া যায়নি।" />
               </div>
             ) : (
-              latest.articles.map((article) => (
+              latest.articles.slice(0, 8).map((article) => (
                 <div key={article._id} className="py-3">
                   <NewsCard
                     article={article}
@@ -85,7 +92,7 @@ export function LatestNewsSection() {
                 <EmptyState message="কোনো জনপ্রিয় সংবাদ পাওয়া যায়নি।" />
               </div>
             ) : (
-              popular.articles.map((article, index) => (
+              popular.articles.slice(0, 5).map((article, index) => (
                 <div key={article._id} className="flex gap-3 py-3">
                   {/* Number */}
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center bg-primary text-sm font-bold text-primary-foreground">
@@ -98,12 +105,20 @@ export function LatestNewsSection() {
                       article={article}
                       variant="compact"
                       showExcerpt={false}
+                      metaType="views"
                       className="border-0 py-0"
                     />
                   </div>
                 </div>
               ))
             )}
+          </div>
+
+          {/* বিজ্ঞাপন — সর্বাধিক পঠিত-এর নিচে ad slot */}
+          <div className="border-t border-border p-4">
+            <div className="flex h-24 w-full items-center justify-center rounded-sm border border-dashed border-border bg-muted/30 text-xs text-muted-foreground">
+              বিজ্ঞাপন
+            </div>
           </div>
         </aside>
       </div>

@@ -26,7 +26,17 @@ export function HeroMediaSlider({ videos, photos }: HeroMediaSliderProps) {
     return null;
   }
 
-  const imageUrl = currentMedia.thumbnail || currentMedia.url || FALLBACK_IMAGE;
+  const isVideoTab = activeTab === "video";
+
+  // video ট্যাব-এ থাম্বনেইল না থাকলে FALLBACK_IMAGE দেখাবো না —
+  // বরং video.url দিয়ে সরাসরি <video> ট্যাগ রেন্ডার করবো, browser নিজেই
+  // ফাইলের আসল প্রথম ফ্রেম দেখাবে (VideoGallerySection-এ যেভাবে করা)
+  const showNativeVideoPreview = isVideoTab && !currentMedia.thumbnail;
+
+  const imageUrl =
+    currentMedia.thumbnail ||
+    (isVideoTab ? "" : currentMedia.url) ||
+    FALLBACK_IMAGE;
 
   return (
     <div
@@ -88,18 +98,36 @@ export function HeroMediaSlider({ videos, photos }: HeroMediaSliderProps) {
           overflow-hidden
         "
       >
-        <Image
-          src={imageUrl}
-          alt={currentMedia.title ?? "Media"}
-          fill
-          sizes="(min-width:1024px) 25vw,100vw"
-          className="
-            object-cover
-            transition-transform
-            duration-500
-            group-hover:scale-110
-          "
-        />
+        {showNativeVideoPreview ? (
+          <video
+            src={currentMedia.url}
+            muted
+            preload="metadata"
+            className="
+              absolute
+              inset-0
+              h-full
+              w-full
+              object-cover
+              transition-transform
+              duration-500
+              group-hover:scale-110
+            "
+          />
+        ) : (
+          <Image
+            src={imageUrl}
+            alt={currentMedia.title ?? "Media"}
+            fill
+            sizes="(min-width:1024px) 25vw,100vw"
+            className="
+              object-cover
+              transition-transform
+              duration-500
+              group-hover:scale-110
+            "
+          />
+        )}
 
         <div
           className="
@@ -173,7 +201,7 @@ export function HeroMediaSlider({ videos, photos }: HeroMediaSliderProps) {
             font-bold
           "
           >
-            {currentMedia.title ?? "মিডিয়া স্টোরি"}
+            {currentMedia.title ?? "মিডিয়া স্টোরি"}
           </h3>
         </div>
       </Link>
@@ -189,15 +217,21 @@ export function HeroMediaSlider({ videos, photos }: HeroMediaSliderProps) {
             p-3
           "
         >
-          {items.slice(1).map((item) => (
-            <Link
-              key={item._id}
-              href={
-                activeTab === "video"
-                  ? `/video/${item._id}`
-                  : `/photo/${item._id}`
-              }
-              className="
+          {items.slice(1).map((item) => {
+            const itemIsNativeVideo = isVideoTab && !item.thumbnail;
+
+            const itemImageUrl =
+              item.thumbnail || (isVideoTab ? "" : item.url) || FALLBACK_IMAGE;
+
+            return (
+              <Link
+                key={item._id}
+                href={
+                  activeTab === "video"
+                    ? `/video/${item._id}`
+                    : `/photo/${item._id}`
+                }
+                className="
                     relative
                     h-16
                     w-24
@@ -205,16 +239,26 @@ export function HeroMediaSlider({ videos, photos }: HeroMediaSliderProps) {
                     overflow-hidden
                     rounded-sm
                   "
-            >
-              <Image
-                src={item.thumbnail || item.url || FALLBACK_IMAGE}
-                alt={item.title ?? "media"}
-                fill
-                sizes="96px"
-                className="object-cover"
-              />
-            </Link>
-          ))}
+              >
+                {itemIsNativeVideo ? (
+                  <video
+                    src={item.url}
+                    muted
+                    preload="metadata"
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                ) : (
+                  <Image
+                    src={itemImageUrl}
+                    alt={item.title ?? "media"}
+                    fill
+                    sizes="96px"
+                    className="object-cover"
+                  />
+                )}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

@@ -1,279 +1,189 @@
 "use client";
-import { useState } from "react";
+
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Camera,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  ZoomIn,
-  Grid,
-  Image as ImageIcon,
-} from "lucide-react";
+import { X } from "lucide-react";
+import { useState } from "react";
+
 import { getPublicMedia } from "@/features/media/services/media-public.service";
+import type { Media } from "@/features/media/types/media.types";
 
 export default function PhotoGallerySection() {
-  const [page, setPage] = useState(1);
-  const limit = 9;
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
-  const [selectedPhotoTitle, setSelectedPhotoTitle] = useState<string | null>(
-    null,
-  );
+  const [selectedPhoto, setSelectedPhoto] = useState<Media | null>(null);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["public-photo-gallery", page],
-    queryFn: () => getPublicMedia("image", page, limit),
+    queryKey: ["public-photo-gallery-home"],
+    queryFn: () => getPublicMedia("image", 1, 4),
   });
 
   const photos = data?.data ?? [];
-  const totalPages = Math.max(1, Math.ceil((data?.total ?? 0) / limit));
 
-  // Take first 6 photos for the grid
-  const displayPhotos = photos.slice(0, 6);
-  const mainPhoto = displayPhotos[0];
-  const rightPhotos = displayPhotos.slice(1, 4);
-  const bottomPhotos = displayPhotos.slice(4, 6);
-
-  const handlePhotoClick = (url: string, title: string | null) => {
-    setSelectedPhoto(url);
-    setSelectedPhotoTitle(title);
-    document.body.style.overflow = "hidden";
-  };
+  const mainPhoto = photos[0];
+  const sidePhotos = photos.slice(1, 3);
+  const bottomPhoto = photos[3];
 
   const closeModal = () => {
     setSelectedPhoto(null);
-    setSelectedPhotoTitle(null);
-    document.body.style.overflow = "unset";
   };
 
+  // Loading state
   if (isLoading) {
     return (
-      <section className="py-8">
-        <div className="container mx-auto px-4">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="h-9 w-9 animate-pulse rounded-xl bg-muted" />
-            <div className="h-8 w-44 animate-pulse rounded-lg bg-muted" />
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="col-span-2 row-span-2 h-[400px] animate-pulse rounded-2xl bg-muted" />
-            <div className="h-[195px] animate-pulse rounded-2xl bg-muted" />
-            <div className="h-[195px] animate-pulse rounded-2xl bg-muted" />
-            <div className="col-span-2 h-[195px] animate-pulse rounded-2xl bg-muted" />
-            <div className="h-[195px] animate-pulse rounded-2xl bg-muted" />
-          </div>
+      <section className="py-6">
+        <div className="mb-5 flex items-center justify-between border-b-2 border-foreground pb-2">
+          <div className="h-7 w-24 animate-pulse rounded bg-muted" />
+
+          <div className="h-5 w-16 animate-pulse rounded bg-muted" />
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="h-[280px] animate-pulse rounded-md bg-muted sm:col-span-2 sm:row-span-2 sm:h-[360px]" />
+
+          <div className="h-[170px] animate-pulse rounded-md bg-muted" />
+
+          <div className="h-[170px] animate-pulse rounded-md bg-muted" />
+
+          <div className="h-[170px] animate-pulse rounded-md bg-muted" />
         </div>
       </section>
     );
   }
 
-  if (isError || photos.length === 0) {
+  // Error / Empty state
+  if (isError || !mainPhoto) {
     return null;
   }
 
   return (
     <>
       <section className="py-6">
-        <div className="container mx-auto px-4">
-          {/* Header */}
-          <div className="mb-5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg shadow-blue-600/20">
-                <Camera className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-foreground tracking-tight">
-                  Photo Gallery
-                </h2>
-                <p className="text-[11px] text-muted-foreground">
-                  {data?.total || 0} photos
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 rounded-full bg-muted/30 px-3 py-1.5 text-xs text-muted-foreground">
-              <Grid className="h-3.5 w-3.5" />
-              <span>Latest</span>
-            </div>
-          </div>
+        {/* Header */}
+        <div className="mb-4 flex items-center justify-between border-b-2 border-foreground pb-2">
+          <h2 className="text-xl font-bold text-foreground sm:text-2xl">
+            ছবিঘর
+          </h2>
 
-          {/* Gallery Grid - Facebook Cover Style */}
-          <div className="grid grid-cols-3 gap-2 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/50 p-2 shadow-xl shadow-black/10">
-            {/* Left side - 66% (Main large photo) */}
-            <div className="col-span-2 row-span-2">
-              {mainPhoto && (
-                <div
-                  className="group relative h-[400px] cursor-pointer overflow-hidden rounded-xl"
-                  onClick={() =>
-                    handlePhotoClick(mainPhoto.url, mainPhoto.title)
-                  }
-                >
-                  <img
-                    src={mainPhoto.url}
-                    alt={mainPhoto.title || "Main photo"}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
+          <Link
+            href="/photo"
+            className="text-sm font-medium text-primary transition-colors hover:underline"
+          >
+            সব দেখুন →
+          </Link>
+        </div>
 
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        {/* Gallery Grid */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {/* Main Photo */}
+          <button
+            type="button"
+            onClick={() => setSelectedPhoto(mainPhoto)}
+            aria-label={`ছবি দেখুন: ${mainPhoto.title || "ছবি"}`}
+            className="group relative h-[280px] overflow-hidden rounded-md sm:col-span-2 sm:row-span-2 sm:h-[360px]"
+          >
+            <img
+              src={mainPhoto.url}
+              alt={mainPhoto.title || "ছবি"}
+              loading="lazy"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
 
-                  {/* Content */}
-                  <div className="absolute bottom-0 left-0 right-0 p-5 text-white opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:translate-y-0 translate-y-4">
-                    {mainPhoto.title && (
-                      <h3 className="text-lg font-bold leading-tight drop-shadow-lg">
-                        {mainPhoto.title}
-                      </h3>
-                    )}
-                    <div className="mt-1 flex items-center gap-2 text-xs text-white/70">
-                      <ZoomIn className="h-3.5 w-3.5" />
-                      <span>Click to enlarge</span>
-                    </div>
-                  </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
 
-                  {/* Badge */}
-                  <div className="absolute left-3 top-3 rounded-full bg-black/50 px-3 py-1 text-[10px] font-medium text-white backdrop-blur-sm">
-                    Featured
-                  </div>
-
-                  {/* View counter */}
-                  <div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/40 px-2.5 py-1 text-[10px] text-white/80 backdrop-blur-sm">
-                    <Camera className="h-3 w-3" />
-                    <span>1</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Right side - 33% (3 small stacked photos) */}
-            <div className="flex flex-col gap-2">
-              {rightPhotos.map((photo) => (
-                <div
-                  key={photo._id}
-                  className="group relative flex-1 cursor-pointer overflow-hidden rounded-xl"
-                  onClick={() => handlePhotoClick(photo.url, photo.title)}
-                >
-                  <div className="h-[126px]">
-                    <img
-                      src={photo.url}
-                      alt={photo.title || "Photo"}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                  <div className="absolute bottom-0 left-0 right-0 p-2 text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    {photo.title && (
-                      <p className="line-clamp-1 text-[10px] font-medium drop-shadow-lg">
-                        {photo.title}
-                      </p>
-                    )}
-                  </div>
-                  <div className="absolute right-1.5 top-1.5 rounded-full bg-black/40 p-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    <ZoomIn className="h-2.5 w-2.5 text-white" />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Bottom row - spans full width (2 more photos) */}
-            {bottomPhotos.length > 0 && (
-              <div className="col-span-3 grid grid-cols-2 gap-2">
-                {bottomPhotos.map((photo) => (
-                  <div
-                    key={photo._id}
-                    className="group relative cursor-pointer overflow-hidden rounded-xl"
-                    onClick={() => handlePhotoClick(photo.url, photo.title)}
-                  >
-                    <div className="h-[190px]">
-                      <img
-                        src={photo.url}
-                        alt={photo.title || "Photo"}
-                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3 text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                      {photo.title && (
-                        <p className="line-clamp-1 text-sm font-medium drop-shadow-lg">
-                          {photo.title}
-                        </p>
-                      )}
-                    </div>
-                    <div className="absolute right-2 top-2 rounded-full bg-black/40 p-1.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                      <ZoomIn className="h-3 w-3 text-white" />
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {mainPhoto.title && (
+              <p className="absolute bottom-3 left-3 right-3 text-left text-sm font-semibold text-white sm:text-base">
+                {mainPhoto.title}
+              </p>
             )}
-          </div>
+          </button>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-5 flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
-                disabled={page === 1}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background text-sm transition-all hover:border-blue-500 hover:bg-blue-500/5 disabled:opacity-30"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
+          {/* Side Photos */}
+          {sidePhotos.map((photo) => (
+            <button
+              key={photo._id}
+              type="button"
+              onClick={() => setSelectedPhoto(photo)}
+              aria-label={`ছবি দেখুন: ${photo.title || "ছবি"}`}
+              className="group relative h-[170px] overflow-hidden rounded-md"
+            >
+              <img
+                src={photo.url}
+                alt={photo.title || "ছবি"}
+                loading="lazy"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
 
-              <div className="flex items-center gap-1.5 px-3 text-sm">
-                <span className="font-semibold text-foreground">{page}</span>
-                <span className="text-muted-foreground">/</span>
-                <span className="text-muted-foreground">{totalPages}</span>
-              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent" />
 
-              <button
-                type="button"
-                onClick={() =>
-                  setPage((current) => Math.min(totalPages, current + 1))
-                }
-                disabled={page >= totalPages}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background text-sm transition-all hover:border-blue-500 hover:bg-blue-500/5 disabled:opacity-30"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+              {photo.title && (
+                <p className="absolute bottom-2 left-2 right-2 line-clamp-2 text-left text-xs font-medium text-white">
+                  {photo.title}
+                </p>
+              )}
+            </button>
+          ))}
+
+          {/* Bottom Photo */}
+          {bottomPhoto && (
+            <button
+              type="button"
+              onClick={() => setSelectedPhoto(bottomPhoto)}
+              aria-label={`ছবি দেখুন: ${bottomPhoto.title || "ছবি"}`}
+              className="group relative h-[170px] overflow-hidden rounded-md"
+            >
+              <img
+                src={bottomPhoto.url}
+                alt={bottomPhoto.title || "ছবি"}
+                loading="lazy"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent" />
+
+              {bottomPhoto.title && (
+                <p className="absolute bottom-2 left-2 right-2 line-clamp-2 text-left text-xs font-medium text-white">
+                  {bottomPhoto.title}
+                </p>
+              )}
+            </button>
           )}
         </div>
       </section>
 
-      {/* Lightbox Modal - Premium */}
+      {/* Lightbox */}
       {selectedPhoto && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 backdrop-blur-xl"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label={selectedPhoto.title || "Photo preview"}
           onClick={closeModal}
         >
           {/* Close Button */}
           <button
+            type="button"
             onClick={closeModal}
-            className="absolute right-5 top-5 rounded-full bg-white/10 p-2.5 text-white transition-all hover:bg-white/20 hover:scale-110"
+            aria-label="Close photo preview"
+            className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2.5 text-white transition-colors hover:bg-white/20 sm:right-5 sm:top-5"
           >
             <X className="h-6 w-6" />
           </button>
 
+          {/* Image Container */}
           <div
-            className="relative max-h-[90vh] max-w-[90vw]"
+            className="relative flex max-h-[90vh] max-w-[95vw] flex-col items-center sm:max-w-[90vw]"
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={selectedPhoto}
-              alt={selectedPhotoTitle || "Photo"}
-              className="max-h-[85vh] w-auto rounded-xl object-contain shadow-2xl"
+              src={selectedPhoto.url}
+              alt={selectedPhoto.title || "Photo"}
+              className="max-h-[80vh] max-w-full rounded-lg object-contain"
             />
 
-            {selectedPhotoTitle && (
-              <div className="absolute bottom-0 left-0 right-0 rounded-b-xl bg-gradient-to-t from-black/80 to-transparent p-5">
-                <p className="text-center text-base font-medium text-white drop-shadow-lg">
-                  {selectedPhotoTitle}
-                </p>
-              </div>
+            {selectedPhoto.title && (
+              <p className="mt-3 max-w-2xl text-center text-sm font-medium text-white sm:text-base">
+                {selectedPhoto.title}
+              </p>
             )}
-
-            {/* Navigation hint */}
-            <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-xs text-white/30">
-              Click outside to close
-            </div>
           </div>
         </div>
       )}

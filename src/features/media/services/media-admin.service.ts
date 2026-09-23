@@ -42,22 +42,31 @@ export async function uploadMedia(
 
   formData.append("file", file);
 
-  if (title) {
-    formData.append("title", title);
-  }
-
-  if (category) {
-    formData.append("category", category);
-  }
-
-  if (tags) {
-    formData.append("tags", tags);
-  }
+  if (title) formData.append("title", title);
+  if (category) formData.append("category", category);
+  if (tags) formData.append("tags", tags);
 
   const response = await apiClient.post<MediaResponse>(
     "/media/upload",
     formData,
   );
+
+  return response.data.data;
+}
+
+// NEW: add a video by YouTube link (no file, JSON body)
+export async function addYoutubeVideo(
+  youtubeUrl: string,
+  title?: string,
+  category?: string,
+  tags?: string,
+): Promise<Media> {
+  const response = await apiClient.post<MediaResponse>("/media/youtube", {
+    youtubeUrl,
+    title,
+    category,
+    tags,
+  });
 
   return response.data.data;
 }

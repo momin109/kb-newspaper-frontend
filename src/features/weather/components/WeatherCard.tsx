@@ -1,5 +1,4 @@
 import {
-  AdIcon,
   Cloud,
   CloudRain,
   CloudSun,
@@ -8,6 +7,8 @@ import {
   Sun,
   Wind,
 } from "lucide-react";
+
+import type { Weather } from "../services/weather.service";
 
 function getWeatherIcon(condition = "") {
   const value = condition.toLowerCase();
@@ -25,39 +26,47 @@ function getWeatherIcon(condition = "") {
     return Cloud;
   }
 
-  if (value.includes("sun") || value.includes("রোদ")) {
+  if (
+    value.includes("clear") ||
+    value.includes("sun") ||
+    value.includes("রোদ")
+  ) {
     return Sun;
   }
 
   return CloudSun;
 }
 
-export function WeatherCard({ weather }) {
+export function WeatherCard({ weather }: { weather: Weather | null }) {
   if (!weather) return null;
 
   const Icon = getWeatherIcon(weather.condition);
 
   return (
-    <section className="rounded-xl border bg-card p-5 shadow-sm">
+    <section className="w-full max-w-xs rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <MapPin className="h-4 w-4" />
             <span>{weather.city || "ঢাকা"}</span>
           </div>
-
-          <h2 className="mt-1 text-lg font-bold">আজকের আবহাওয়া</h2>
+          <h2 className="mt-1 text-base font-bold text-foreground">
+            আজকের আবহাওয়া
+          </h2>
         </div>
 
-        <AdIcon className="h-10 w-10 text-primary" />
+        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Icon className="h-6 w-6" />
+        </span>
       </div>
 
       <div className="flex items-center gap-5">
         <div>
-          <p className="text-4xl font-bold">{weather.temperature}°</p>
-
-          <p className="mt-1 text-sm text-muted-foreground">
-            {weather.condition}
+          <p className="text-4xl font-bold text-foreground">
+            {weather.temperature}°
+          </p>
+          <p className="mt-1 text-sm capitalize text-muted-foreground">
+            {weather.description || weather.condition}
           </p>
         </div>
 
@@ -68,7 +77,6 @@ export function WeatherCard({ weather }) {
               <span>আর্দ্রতা {weather.humidity}%</span>
             </div>
           )}
-
           {weather.windSpeed !== undefined && (
             <div className="flex items-center gap-2">
               <Wind className="h-4 w-4" />

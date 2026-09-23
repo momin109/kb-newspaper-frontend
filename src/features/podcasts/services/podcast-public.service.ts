@@ -8,6 +8,12 @@ interface PodcastListResponse {
   podcasts: Podcast[];
 }
 
+interface LikedPodcastsResponse {
+  success: boolean;
+  message?: string;
+  podcasts: Podcast[];
+}
+
 export async function getPublicPodcasts(): Promise<PodcastListResponse> {
   const response = await apiClient.get<PodcastListResponse>("/podcast");
 
@@ -48,5 +54,12 @@ export async function getPublicPodcast(podcastId: string) {
 
 export async function playPodcast(podcastId: string) {
   const response = await apiClient.patch(`/podcast/${podcastId}/play`);
+  return response.data;
+}
+
+// GET /api/podcast/liked/me
+export async function getLikedPodcasts(): Promise<LikedPodcastsResponse> {
+  const response =
+    await apiClient.get<LikedPodcastsResponse>("/podcast/liked/me");
   return response.data;
 }

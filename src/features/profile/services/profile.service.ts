@@ -41,3 +41,8 @@ export async function changePassword(
 ): Promise<void> {
   await apiClient.patch("/user/me/password", payload);
 }
+
+/** DELETE /api/profile/delete — নিজের অ্যাকাউন্ট স্থায়ীভাবে মুছে ফেলে। */
+export async function deleteMyAccount(): Promise<void> {
+  await apiClient.delete("/profile/delete");
+}

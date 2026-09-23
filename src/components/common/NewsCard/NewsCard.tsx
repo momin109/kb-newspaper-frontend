@@ -20,8 +20,8 @@ interface NewsCardProps {
   variant?: NewsCardVariant;
   showExcerpt?: boolean;
   className?: string;
+  metaType?: "time" | "views"; // NEW — compact variant-এ time বা view-count দেখানোর জন্য
 }
-
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1495020689067-958852a7765e?w=800&q=80";
 
@@ -36,6 +36,7 @@ export function NewsCard({
   variant = "default",
   showExcerpt = true,
   className,
+  metaType = "time",
 }: NewsCardProps) {
   const href = `/article/${article.slug}`;
   const imageUrl = article.thumbnail?.url ?? FALLBACK_IMAGE;
@@ -65,9 +66,17 @@ export function NewsCard({
           <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground group-hover:text-primary">
             {article.title}
           </h4>
-          <span className="mt-1 block text-xs text-muted-foreground">
-            {timeLabel}
-          </span>
+
+          {metaType === "views" ? (
+            <span className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+              <Eye className="h-3.5 w-3.5" />
+              {article.views.toLocaleString("bn-BD")} জন পড়েছেন
+            </span>
+          ) : (
+            <span className="mt-1 block text-xs text-muted-foreground">
+              {timeLabel}
+            </span>
+          )}
         </div>
       </Link>
     );

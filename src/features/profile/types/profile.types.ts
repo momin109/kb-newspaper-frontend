@@ -11,6 +11,7 @@ export interface Profile {
   address: string | null;
   bio: string | null;
   website: string | null;
+  designation: string | null; // NEW
   role: UserRole;
   avatar: string | null;
   isVerified: boolean;
@@ -24,6 +25,7 @@ export interface UpdateProfilePayload {
   address?: string;
   bio?: string;
   website?: string;
+  designation?: string; // NEW
 }
 
 export interface ChangePasswordPayload {

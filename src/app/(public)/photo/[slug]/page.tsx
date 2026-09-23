@@ -33,14 +33,14 @@ export async function generateMetadata({
 
   const photo = await getPhotoById(slug);
 
-  if (!photo) {
+  if (!photo || photo.type !== "image") {
     return {
-      title: "Photo not found",
+      title: "ছবি পাওয়া যায়নি | প্রভাতবার্তা",
     };
   }
 
   return {
-    title: `${photo.title ?? "Photo Story"} | প্রভাতবার্তা`,
+    title: `${photo.title ?? "ছবিঘর"} | প্রভাতবার্তা`,
 
     openGraph: {
       images: photo.url ? [photo.url] : [],
@@ -53,7 +53,9 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
 
   const photo = await getPhotoById(slug);
 
-  if (!photo) {
+  // এখানে type guard-টা জরুরি — কোনো ভিডিওর _id দিয়ে এই URL-এ আসলে
+  // `photo.url` একটা .mp4/YouTube link হবে, যেটা next/image দিয়ে render করা যায় না
+  if (!photo || photo.type !== "image") {
     notFound();
   }
 
@@ -86,7 +88,7 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
             sm:text-3xl
           "
           >
-            {photo.title ?? "Photo Story"}
+            {photo.title ?? "ছবিঘর"}
           </h1>
         </div>
 
@@ -102,7 +104,7 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
         >
           <Image
             src={photo.url}
-            alt={photo.title ?? "Photo Story"}
+            alt={photo.title ?? "ছবিঘর"}
             fill
             sizes="
               (max-width:768px)100vw,
@@ -124,8 +126,21 @@ export default async function PhotoPage({ params }: PhotoPageProps) {
             text-muted-foreground
           "
           >
-            Published: {new Date(photo.createdAt).toLocaleDateString("bn-BD")}
+            প্রকাশিত: {new Date(photo.createdAt).toLocaleDateString("bn-BD")}
           </div>
+
+          {photo.tags && photo.tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {photo.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </article>
     </main>

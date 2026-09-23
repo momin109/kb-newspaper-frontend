@@ -9,13 +9,27 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
+  Trash2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import {
   changePassword,
+  deleteMyAccount,
   getMe,
   updateMe,
 } from "@/features/profile/services/profile.service";
@@ -26,6 +40,7 @@ import type {
 
 export default function EditProfilePage() {
   const router = useRouter();
+  const { logout } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -49,6 +64,10 @@ export default function EditProfilePage() {
     text: string;
   } | null>(null);
 
+  // Danger zone — account delete
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   useEffect(() => {
     getMe().then((p) => {
       setProfile(p);
@@ -58,6 +77,7 @@ export default function EditProfilePage() {
         address: p.address ?? "",
         bio: p.bio ?? "",
         website: p.website ?? "",
+        designation: p.designation ?? "", // NEW
       });
     });
   }, []);
@@ -110,6 +130,18 @@ export default function EditProfilePage() {
       });
     } finally {
       setSavingPassword(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteMyAccount();
+      logout();
+      router.push("/");
+    } catch {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -219,6 +251,18 @@ export default function EditProfilePage() {
           </div>
 
           <div className="space-y-1.5">
+            <Label htmlFor="designation">পরিচয় / পদবি</Label>
+            <Input
+              id="designation"
+              className="h-11"
+              placeholder="যেমন: রাজনৈতিক বিশ্লেষক, অর্থনীতিবিদ"
+              value={form.designation ?? ""}
+              onChange={(e) =>
+                setForm({ ...form, designation: e.target.value })
+              }
+            />
+          </div>
+          <div className="space-y-1.5">
             <Label htmlFor="bio">বায়ো</Label>
             <textarea
               id="bio"
@@ -318,6 +362,72 @@ export default function EditProfilePage() {
           </Button>
         </form>
       </div>
+
+      {/* Danger zone — অ্যাকাউন্ট ডিলিট */}
+      <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/5 p-6">
+        <div className="flex items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
+            <AlertTriangle className="h-4.5 w-4.5" />
+          </span>
+          <div className="flex-1">
+            <h2 className="text-base font-bold text-destructive">
+              অ্যাকাউন্ট মুছে ফেলুন
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              একবার মুছে ফেললে আপনার প্রোফাইল, মন্তব্য ও অন্যান্য সব তথ্য
+              স্থায়ীভাবে হারিয়ে যাবে — এটি ফিরিয়ে আনা যাবে না।
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(true)}
+              className="mt-4 gap-1.5 rounded-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              অ্যাকাউন্ট মুছে ফেলুন
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+            <AlertDialogDescription>
+              আপনার অ্যাকাউন্ট ও সংশ্লিষ্ট সব তথ্য স্থায়ীভাবে মুছে যাবে। এই
+              কাজটি{" "}
+              <span className="font-medium text-foreground">
+                ফিরিয়ে আনা যাবে না
+              </span>
+              ।
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>বাতিল</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteAccount();
+              }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  মুছে ফেলা হচ্ছে...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4" />
+                  হ্যাঁ, মুছে ফেলুন
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

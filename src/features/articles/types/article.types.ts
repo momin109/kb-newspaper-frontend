@@ -24,7 +24,12 @@ export interface Article {
   mediaFiles: ArticleMediaFile[];
   category: Pick<Category, "_id" | "name"> | null;
   tags: string[];
-  author: { _id: string; fullName: string } | null;
+  author: {
+    _id: string;
+    fullName: string;
+    avatar?: string | null;
+    designation?: string | null;
+  } | null;
   shareCount: number;
   status: ArticleStatus;
   isPremium: boolean;

@@ -7,6 +7,11 @@ import { SportsEntertainmentSection } from "@/features/articles/components/Sport
 import PodcastSection from "@/features/podcasts/components/PodcastSection";
 import PhotoGallerySection from "@/features/media/components/PhotoGallerySection";
 import VideoGallerySection from "@/features/media/components/VideoGallerySection";
+import { StoriesRow } from "@/features/stories/components/StoriesRow";
+import { WeatherWidget } from "@/features/weather/components/WeatherWidget";
+import { CountrywideNewsSection } from "@/features/articles/components/CountrywideNewsSection";
+import { OpinionEditorialSection } from "@/features/articles/components/OpinionEditorialSection"; // NEW
+
 /**
  * Homepage — async Server Component. Fetches categories once here and
  * distributes them to the sections that need them (tab list, preview
@@ -44,6 +49,12 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto max-w-7xl divide-y divide-border px-3 py-6 sm:px-4">
+      <div className="pb-6">
+        <StoriesRow />
+      </div>
+      <div className="pb-6">
+        <WeatherWidget />
+      </div>
       <div className="pb-8">
         <HeroSection />
       </div>
@@ -55,6 +66,16 @@ export default async function HomePage() {
           sportsCategory={sportsCategory}
           entertainmentCategory={entertainmentCategory}
         />
+      </div>
+
+      {/* NEW */}
+      <div className="py-8">
+        <CountrywideNewsSection categories={categories} />
+      </div>
+
+      {/* NEW */}
+      <div className="py-8">
+        <OpinionEditorialSection categories={categories} />
       </div>
 
       {/* {previewCategories.map((category) => (
