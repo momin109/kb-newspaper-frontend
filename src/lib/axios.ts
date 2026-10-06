@@ -2,7 +2,9 @@ import axios from "axios";
 import { store } from "@/store";
 
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001/api",
+  baseURL:
+    process.env.NEXT_PUBLIC_API_BASE_URL ??
+    "https://kb-newspaper-server.onrender.com/api",
 });
 
 apiClient.interceptors.request.use((config) => {

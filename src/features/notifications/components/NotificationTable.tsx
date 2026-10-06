@@ -54,6 +54,10 @@ function getRecipient(notification: Notification) {
     return "সকল ব্যবহারকারী";
   }
 
+  if (typeof notification.user === "string") {
+    return notification.user;
+  }
+
   return notification.user.fullName || notification.user.email;
 }
 
@@ -136,11 +140,12 @@ export function NotificationTable({
                           {notification.message}
                         </p>
 
-                        {notification.article && (
-                          <p className="mt-1 truncate text-xs text-primary">
-                            Article: {notification.article.title}
-                          </p>
-                        )}
+                        {notification.article &&
+                          typeof notification.article !== "string" && (
+                            <p className="mt-1 truncate text-xs text-primary">
+                              Article: {notification.article.title}
+                            </p>
+                          )}
                       </div>
                     </div>
                   </td>
@@ -284,11 +289,12 @@ export function NotificationTable({
                 )}
               </div>
 
-              {notification.article && (
-                <p className="mt-2 truncate text-xs text-primary">
-                  Article: {notification.article.title}
-                </p>
-              )}
+              {notification.article &&
+                typeof notification.article !== "string" && (
+                  <p className="mt-2 truncate text-xs text-primary">
+                    Article: {notification.article.title}
+                  </p>
+                )}
             </div>
           );
         })}

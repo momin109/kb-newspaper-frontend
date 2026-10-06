@@ -46,30 +46,29 @@ export function CreateNotificationForm({
       return;
     }
 
-    try {
-      await createNotification({
-        title: title.trim(),
-        message: message.trim(),
-        type,
-        article: article.trim() || null,
-        link: link.trim() || null,
-        user: null,
-      });
+    const success = await createNotification({
+      title: title.trim(),
+      message: message.trim(),
+      type,
+      article: article.trim() || null,
+      link: link.trim() || null,
+      user: null,
+    });
 
-      toast.success("Notification created successfully");
-
-      setTitle("");
-      setMessage("");
-      setType("system");
-      setArticle("");
-      setLink("");
-
-      onSuccess?.();
-    } catch (error) {
-      console.error("Create notification error:", error);
-
+    if (!success) {
       toast.error("Notification তৈরি করা যায়নি");
+      return;
     }
+
+    toast.success("Notification created successfully");
+
+    setTitle("");
+    setMessage("");
+    setType("system");
+    setArticle("");
+    setLink("");
+
+    onSuccess?.();
   }
 
   return (

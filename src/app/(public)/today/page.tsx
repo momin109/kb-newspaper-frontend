@@ -441,44 +441,33 @@ export default function TodayNewspaperPage() {
         </div>
 
         {/* Tabs: Latest, Trending, Popular */}
-        <Tabs
-          defaultValue="latest"
-          className="mb-8"
-          onValueChange={setActiveTab}
-        >
+        <Tabs value={activeTab} className="mb-8" onValueChange={setActiveTab}>
           <TabsList className="bg-secondary/20 p-1 rounded-full border border-border/50">
-            <TabsTrigger
-              value="latest"
-              className="rounded-full data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20"
-            >
-              <Clock className="h-4 w-4 mr-2" />
+            <TabsTrigger value="latest">
+              <Clock className="mr-2 h-4 w-4" />
               সর্বশেষ
             </TabsTrigger>
-            <TabsTrigger
-              value="trending"
-              className="rounded-full data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20"
-            >
-              <Flame className="h-4 w-4 mr-2" />
+
+            <TabsTrigger value="trending">
+              <Flame className="mr-2 h-4 w-4" />
               ট্রেন্ডিং
             </TabsTrigger>
-            <TabsTrigger
-              value="popular"
-              className="rounded-full data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20"
-            >
-              <Award className="h-4 w-4 mr-2" />
+
+            <TabsTrigger value="popular">
+              <Award className="mr-2 h-4 w-4" />
               জনপ্রিয়
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="latest" className="mt-6">
+          <TabsContent value="latest">
             <NewsGrid news={filteredNews} />
           </TabsContent>
 
-          <TabsContent value="trending" className="mt-6">
+          <TabsContent value="trending">
             <NewsGrid news={trendingNews} />
           </TabsContent>
 
-          <TabsContent value="popular" className="mt-6">
+          <TabsContent value="popular">
             <NewsGrid
               news={[...mockNews].sort((a, b) => b.views - a.views).slice(0, 6)}
             />

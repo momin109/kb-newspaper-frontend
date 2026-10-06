@@ -126,12 +126,12 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex gap-2">
-              <Button asChild size="sm" className="gap-1.5 rounded-full px-4">
-                <Link href="/profile/edit">
+              <Link href="/profile/edit">
+                <Button size="sm" className="gap-1.5 rounded-full px-4">
                   <Pencil className="h-3.5 w-3.5" />
                   প্রোফাইল এডিট
-                </Link>
-              </Button>
+                </Button>
+              </Link>
               <Button
                 onClick={logout}
                 size="sm"

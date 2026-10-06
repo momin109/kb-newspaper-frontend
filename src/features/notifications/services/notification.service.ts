@@ -1,58 +1,15 @@
 import { apiClient } from "@/lib/axios";
 
 import type {
+  CreateNotificationPayload,
   MyNotificationsResponse,
-  NotificationResponse,
+  Notification,
+  NotificationPagination,
+  NotificationType,
 } from "../types/notification.types";
 
-export interface NotificationArticle {
-  _id: string;
-  title: string;
-  slug: string;
-}
-
-export interface NotificationUser {
-  _id: string;
-  fullName: string;
-  email: string;
-}
-
-export type NotificationType =
-  | "breaking_news"
-  | "important_news"
-  | "new_article"
-  | "system";
-
-export interface Notification {
-  _id: string;
-  user: NotificationUser | null;
-  title: string;
-  message: string;
-  type: NotificationType;
-  article: NotificationArticle | null;
-  isRead: boolean;
-  isActive: boolean;
-  link: string | null;
-  createdBy?: NotificationUser | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface NotificationListResponse {
-  success: boolean;
-  message: string;
-  data: Notification[];
-  unreadCount?: number;
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-}
-
 export interface GetAdminNotificationsParams {
-  type?: string;
+  type?: NotificationType;
   isActive?: boolean;
   page?: number;
   limit?: number;
@@ -61,13 +18,8 @@ export interface GetAdminNotificationsParams {
 export interface AdminNotificationsResponse {
   success: boolean;
   message: string;
-  data: import("../types/notification.types").Notification[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
+  data: Notification[];
+  pagination: NotificationPagination;
 }
 
 // ======================================================
@@ -78,8 +30,8 @@ export interface AdminNotificationsResponse {
 export async function getMyNotifications(
   page = 1,
   limit = 20,
-): Promise<NotificationListResponse> {
-  const response = await apiClient.get<NotificationListResponse>(
+): Promise<MyNotificationsResponse> {
+  const response = await apiClient.get<MyNotificationsResponse>(
     `/notification/my?page=${page}&limit=${limit}`,
   );
 
@@ -120,8 +72,8 @@ export async function markAllNotificationsAsRead(): Promise<void> {
 export async function getAllNotifications(
   page = 1,
   limit = 20,
-): Promise<NotificationListResponse> {
-  const response = await apiClient.get<NotificationListResponse>(
+): Promise<MyNotificationsResponse> {
+  const response = await apiClient.get<MyNotificationsResponse>(
     `/notification/admin?page=${page}&limit=${limit}`,
   );
 
@@ -132,15 +84,6 @@ export async function getAllNotifications(
 // ADMIN / EDITOR
 // CREATE NOTIFICATION
 // ======================================================
-
-export interface CreateNotificationPayload {
-  user?: string | null;
-  title: string;
-  message: string;
-  type?: NotificationType;
-  article?: string | null;
-  link?: string | null;
-}
 
 export async function createNotification(
   payload: CreateNotificationPayload,
@@ -165,10 +108,12 @@ export async function deleteNotification(
   await apiClient.delete(`/notification/${notificationId}`);
 }
 
-/**
- * ADMIN
- * GET /api/notification/admin
- */
+// ======================================================
+// ADMIN
+// GET ALL NOTIFICATIONS WITH FILTERS
+// GET /api/notification/admin
+// ======================================================
+
 export async function getAdminNotifications(
   params: GetAdminNotificationsParams = {},
 ): Promise<AdminNotificationsResponse> {

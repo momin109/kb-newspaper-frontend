@@ -9,27 +9,29 @@
  * axios client instance instead, since those only ever run in Client
  * Components (forms) and need the Redux-held JWT attached.
  */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:5001/api'
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "https://kb-newspaper-server.onrender.com/api";
 
 interface FetchOptions {
-  revalidate?: number | false
-  cache?: RequestCache
+  revalidate?: number | false;
+  cache?: RequestCache;
 }
 
 export async function apiGet<T>(
   path: string,
-  options: FetchOptions = { revalidate: 60 }
+  options: FetchOptions = { revalidate: 60 },
 ): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...(options.cache ? { cache: options.cache } : {}),
     ...(options.revalidate !== undefined && !options.cache
       ? { next: { revalidate: options.revalidate } }
       : {}),
-  })
+  });
 
   if (!res.ok) {
-    throw new Error(`API GET ${path} failed: ${res.status}`)
+    throw new Error(`API GET ${path} failed: ${res.status}`);
   }
 
-  return res.json() as Promise<T>
+  return res.json() as Promise<T>;
 }

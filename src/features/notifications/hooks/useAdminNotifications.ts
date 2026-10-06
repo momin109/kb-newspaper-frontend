@@ -3,11 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type {
+  CreateNotificationPayload,
   Notification,
   NotificationPagination,
   NotificationType,
 } from "../types/notification.types";
+
 import {
+  createNotification,
   deleteNotification,
   getAdminNotifications,
 } from "../services/notification.service";
@@ -24,6 +27,7 @@ interface UseAdminNotificationsReturn {
   pagination: NotificationPagination;
 
   isLoading: boolean;
+  isCreating: boolean;
   isDeleting: boolean;
   error: string | null;
 
@@ -37,6 +41,9 @@ interface UseAdminNotificationsReturn {
   setIsActive: (value: boolean | undefined) => void;
 
   refetch: () => Promise<void>;
+
+  createNotification: (payload: CreateNotificationPayload) => Promise<boolean>;
+
   handleDelete: (id: string) => Promise<boolean>;
 }
 
@@ -70,7 +77,9 @@ export function useAdminNotifications({
   );
 
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
 
   const fetchNotifications = useCallback(async () => {
@@ -86,7 +95,6 @@ export function useAdminNotifications({
       });
 
       setNotifications(response.data);
-
       setPagination(response.pagination);
     } catch (error) {
       const message =
@@ -105,20 +113,63 @@ export function useAdminNotifications({
     fetchNotifications();
   }, [fetchNotifications]);
 
+  /**
+   * Pagination
+   */
   const setPage = useCallback((newPage: number) => {
     setPageState(newPage);
   }, []);
 
+  /**
+   * Notification type filter
+   */
   const handleSetType = useCallback((newType: NotificationType | undefined) => {
     setType(newType);
     setPageState(1);
   }, []);
 
+  /**
+   * Active status filter
+   */
   const handleSetIsActive = useCallback((value: boolean | undefined) => {
     setIsActive(value);
     setPageState(1);
   }, []);
 
+  /**
+   * Create notification
+   */
+  const handleCreateNotification = useCallback(
+    async (payload: CreateNotificationPayload): Promise<boolean> => {
+      try {
+        setIsCreating(true);
+        setError(null);
+
+        await createNotification(payload);
+
+        // Create হওয়ার পরে latest notification list reload
+        await fetchNotifications();
+
+        return true;
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to create notification";
+
+        setError(message);
+
+        return false;
+      } finally {
+        setIsCreating(false);
+      }
+    },
+    [fetchNotifications],
+  );
+
+  /**
+   * Delete notification
+   */
   const handleDelete = useCallback(
     async (id: string): Promise<boolean> => {
       try {
@@ -127,19 +178,17 @@ export function useAdminNotifications({
 
         await deleteNotification(id);
 
-        // Current page থেকে deleted item remove
         setNotifications((current) =>
           current.filter((notification) => notification._id !== id),
         );
 
-        // Pagination total update
         setPagination((current) => ({
           ...current,
           total: Math.max(0, current.total - 1),
         }));
 
-        // যদি current page empty হয়ে যায়
-        // এবং page 1-এর পরে থাকে তাহলে previous page-এ যাবে
+        // যদি current page-এ শুধু ১টি notification থাকে
+        // এবং সেটা delete করার পরে page empty হয়
         if (notifications.length === 1 && page > 1) {
           setPageState((current) => current - 1);
         }
@@ -166,6 +215,7 @@ export function useAdminNotifications({
     pagination,
 
     isLoading,
+    isCreating,
     isDeleting,
     error,
 
@@ -179,6 +229,9 @@ export function useAdminNotifications({
     setIsActive: handleSetIsActive,
 
     refetch: fetchNotifications,
+
+    createNotification: handleCreateNotification,
+
     handleDelete,
   };
 }
