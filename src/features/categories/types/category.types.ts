@@ -1,12 +1,19 @@
-/** Matches kb-newspaper-server's Category model exactly (models/category.model.js). */
+export interface CategoryParent {
+  _id: string;
+  name: string;
+  slug: string;
+}
+
+/** Matches kb-newspaper-server's Category model (models/category.model.js). */
 export interface Category {
   _id: string;
   name: string;
   slug: string;
-  parent: string | null; // ObjectId of parent category, or null for a main category
+  parent: CategoryParent | string | null; // Populated object or ObjectId or null
   isFeatured: boolean;
-  createdAt: string;
-  updatedAt: string;
+  sortOrder?: number;
+  createdAt?: string;
+  updatedAt?: string;
   children?: Category[];
 }
 
@@ -14,4 +21,19 @@ export interface CategoryTree extends Category {
   children: CategoryTree[];
 }
 
-/** Matches kb-newspaper-server's Category model exactly (models/category.model.js). */
+export interface CreateCategoryInput {
+  name: string;
+  slug?: string;
+  parent?: string | null;
+  isFeatured?: boolean;
+  sortOrder?: number;
+}
+
+export interface UpdateCategoryInput {
+  name: string;
+  slug?: string;
+  parent?: string | null;
+  isFeatured?: boolean;
+  sortOrder?: number;
+}
+

@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { CategoryBadge } from "@/components/common/CategoryBadge";
 import { NewsCard } from "@/components/common/NewsCard";
 import { formatBanglaRelativeTime } from "@/lib/relativeTime";
+import { cn } from "@/lib/utils";
 
 import type { Article } from "../types/article.types";
 import type { Media } from "@/features/media/types/media.types";
@@ -17,21 +18,27 @@ const FALLBACK_IMAGE =
 interface ArticleHeroGridProps {
   articles: Article[];
 
-  videos: Media[];
+  videos?: Media[];
 
-  photos: Media[];
+  photos?: Media[];
 
   emptyMessage?: string;
+
+  // NEW — video/photo story slider কলামটা দেখাবে কিনা। Homepage-এর জন্য
+  // default true (আগের মতোই), category page-এ false পাঠানো হয়।
+  showMediaSlider?: boolean;
 }
 
 export function ArticleHeroGrid({
   articles,
 
-  videos,
+  videos = [],
 
-  photos,
+  photos = [],
 
   emptyMessage = "এই মুহূর্তে কোনো সংবাদ নেই।",
+
+  showMediaSlider = true,
 }: ArticleHeroGridProps) {
   if (!articles || articles.length === 0) {
     return <EmptyState message={emptyMessage} />;
@@ -56,7 +63,7 @@ export function ArticleHeroGrid({
             FEATURED NEWS
         ========================== */}
 
-        <div className="lg:col-span-6">
+        <div className={showMediaSlider ? "lg:col-span-6" : "lg:col-span-7"}>
           <NewsCard
             article={featured}
             variant="featured"
@@ -73,18 +80,10 @@ export function ArticleHeroGrid({
         ========================== */}
 
         <div
-          className="
-            flex
-            h-[390px]
-            flex-col
-            overflow-hidden
-            divide-y
-            divide-border
-            border
-            border-border
-            bg-card
-            lg:col-span-3
-          "
+          className={cn(
+            "flex h-[390px] flex-col overflow-hidden divide-y divide-border border border-border bg-card",
+            showMediaSlider ? "lg:col-span-3" : "lg:col-span-5",
+          )}
         >
           {middleArticles.map((article) => {
             const imageUrl = article.thumbnail?.url ?? FALLBACK_IMAGE;
@@ -166,16 +165,19 @@ export function ArticleHeroGrid({
 
         {/* =========================
             VIDEO / PHOTO STORY SLIDER
+            (শুধু showMediaSlider=true হলে দেখাবে — homepage-এ default true)
         ========================== */}
 
-        <div
-          className="
-            h-[390px]
-            lg:col-span-3
-          "
-        >
-          <HeroMediaSlider videos={videos} photos={photos} />
-        </div>
+        {showMediaSlider && (
+          <div
+            className="
+              h-[390px]
+              lg:col-span-3
+            "
+          >
+            <HeroMediaSlider videos={videos} photos={photos} />
+          </div>
+        )}
       </div>
 
       {/* =========================

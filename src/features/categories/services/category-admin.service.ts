@@ -1,5 +1,12 @@
 import { apiClient } from "@/lib/axios";
-import type { Category, CategoryTree } from "../types/category.types";
+import type {
+  Category,
+  CategoryTree,
+  CreateCategoryInput,
+  UpdateCategoryInput,
+} from "../types/category.types";
+
+export type { CreateCategoryInput, UpdateCategoryInput };
 
 interface CategoryResponse {
   success: boolean;
@@ -19,16 +26,46 @@ interface CategoryTreeResponse {
   data: CategoryTree[];
 }
 
-export interface CreateCategoryInput {
-  name: string;
-  slug: string;
-  parent?: string | null;
-}
+/**
+ * Normalizes raw category response into a flat array of categories.
+ * If the backend returns a nested tree (with children[]), this extracts
+ * both parents and all children into a unified flat list.
+ * If the backend returns a flat list, it passes them through safely.
+ */
+export function normalizeCategories(data: any[]): Category[] {
+  if (!Array.isArray(data)) return [];
 
-export interface UpdateCategoryInput {
-  name: string;
-  slug: string;
-  parent?: string | null;
+  const flatList: Category[] = [];
+  const seenIds = new Set<string>();
+
+  function traverse(item: any, inheritedParentId: string | null = null) {
+    if (!item || !item._id || seenIds.has(item._id)) return;
+    seenIds.add(item._id);
+
+    let parentVal: any = item.parent;
+    if (!parentVal && inheritedParentId) {
+      parentVal = inheritedParentId;
+    }
+
+    flatList.push({
+      _id: item._id,
+      name: item.name,
+      slug: item.slug,
+      parent: parentVal ?? null,
+      isFeatured: Boolean(item.isFeatured),
+      sortOrder: Number(item.sortOrder) || 0,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+      children: Array.isArray(item.children) ? item.children : undefined,
+    });
+
+    if (Array.isArray(item.children) && item.children.length > 0) {
+      item.children.forEach((child: any) => traverse(child, item._id));
+    }
+  }
+
+  data.forEach((root) => traverse(root));
+  return flatList;
 }
 
 /**
@@ -37,7 +74,7 @@ export interface UpdateCategoryInput {
 export async function getAdminCategories(): Promise<Category[]> {
   const response = await apiClient.get<CategoriesResponse>("/category/all");
 
-  return response.data.data;
+  return normalizeCategories(response.data.data);
 }
 
 /**
@@ -45,7 +82,7 @@ export async function getAdminCategories(): Promise<Category[]> {
  */
 export async function getAdminCategoryTree(): Promise<CategoryTree[]> {
   const response = await apiClient.get<CategoryTreeResponse>(
-    "/category-with-sub/all",
+    "/category/all?tree=true",
   );
 
   return response.data.data;
@@ -57,14 +94,13 @@ export async function getAdminCategoryTree(): Promise<CategoryTree[]> {
 export async function createCategory(
   input: CreateCategoryInput,
 ): Promise<Category> {
-  const response = await apiClient.post<CategoryResponse>(
-    "/category-with-sub/create",
-    {
-      name: input.name,
-      slug: input.slug,
-      parent: input.parent ?? null,
-    },
-  );
+  const response = await apiClient.post<CategoryResponse>("/category/create", {
+    name: input.name,
+    slug: input.slug,
+    parent: input.parent ?? null,
+    isFeatured: input.isFeatured ?? false,
+    sortOrder: input.sortOrder ?? 0,
+  });
 
   return response.data.data;
 }
@@ -76,14 +112,13 @@ export async function updateCategory(
   id: string,
   input: UpdateCategoryInput,
 ): Promise<Category> {
-  const response = await apiClient.put<CategoryResponse>(
-    `/category-with-sub/${id}`,
-    {
-      name: input.name,
-      slug: input.slug,
-      parent: input.parent ?? null,
-    },
-  );
+  const response = await apiClient.put<CategoryResponse>(`/category/${id}`, {
+    name: input.name,
+    slug: input.slug,
+    parent: input.parent ?? null,
+    isFeatured: input.isFeatured,
+    sortOrder: input.sortOrder,
+  });
 
   return response.data.data;
 }
@@ -92,5 +127,6 @@ export async function updateCategory(
  * Delete category / sub-category
  */
 export async function deleteCategory(id: string): Promise<void> {
-  await apiClient.delete(`/category-with-sub/${id}`);
+  await apiClient.delete(`/category/${id}`);
 }
+

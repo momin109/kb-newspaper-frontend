@@ -35,25 +35,79 @@ export async function getCategories(): Promise<Category[]> {
  * { success, data } shape used everywhere else, so it gets its own type
  * rather than reusing ApiEnvelope.
  */
+export interface CategoryArticlesResult {
+  category: Category;
+  subCategories: Category[];
+  siblingCategories: Category[];
+  articles: Article[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export async function getCategoryWithArticles(
   slug: string,
-): Promise<{ category: Category; articles: Article[] } | null> {
+  page = 1,
+  limit = 12,
+): Promise<CategoryArticlesResult | null> {
   if (USE_MOCK) {
     const category = MOCK_CATEGORIES.find((c) => c.slug === slug);
+
     if (!category) return null;
-    const articles = MOCK_ARTICLES.filter(
-      (a) => a.category?._id === category._id,
+
+    const allArticles = MOCK_ARTICLES.filter(
+      (article) => article.category?._id === category._id,
     ).sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""));
-    return { category, articles };
+
+    const start = (page - 1) * limit;
+    const articles = allArticles.slice(start, start + limit);
+
+    return {
+      category,
+      subCategories: [],
+      siblingCategories: [],
+      articles,
+      pagination: {
+        page,
+        limit,
+        total: allArticles.length,
+        totalPages: Math.ceil(allArticles.length / limit),
+      },
+    };
   }
 
   try {
+    const query = new URLSearchParams();
+
+    query.set("page", String(page));
+    query.set("limit", String(limit));
+
     const res = await apiGet<{
       success: boolean;
       category: Category;
-      articles: Article[];
-    }>(`/category/all/${slug}`, { revalidate: 60 });
-    return { category: res.category, articles: res.articles };
+      subCategories?: Category[];
+      siblingCategories?: Category[];
+      data: {
+        articles: Article[];
+        pagination: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+      };
+    }>(`/category/${slug}?${query.toString()}`, { revalidate: 60 });
+
+    return {
+      category: res.category,
+      subCategories: res.subCategories ?? [],
+      siblingCategories: res.siblingCategories ?? [],
+      articles: res.data.articles,
+      pagination: res.data.pagination,
+    };
   } catch {
     return null;
   }

@@ -1,28 +1,32 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Share2 } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { Share2 } from "lucide-react";
 
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
-import { NewsCard } from '@/components/common/NewsCard'
-import { EmptyState } from '@/components/common/EmptyState'
-import { useArticlesClient } from '@/features/articles/hooks/useArticlesClient'
-import { getTrendingArticles } from '@/features/articles/services/articles.service'
-import type { Article } from '@/features/articles/types/article.types'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
+import { NewsCard } from "@/components/common/NewsCard";
+import { EmptyState } from "@/components/common/EmptyState";
+import { useArticlesClient } from "@/features/articles/hooks/useArticlesClient";
+import { getTrendingArticles } from "@/features/articles/services/articles.service";
+import type { Article } from "@/features/articles/types/article.types";
 
 /** Client Component — tabbed সর্বশেষ/জনপ্রিয় widget used on the homepage and article pages. */
 export function TrendingSidebar() {
-  const [tab, setTab] = useState('latest')
-  const { articles: latest, isLoading: latestLoading } = useArticlesClient({ limit: 5 })
+  const [tab, setTab] = useState("latest");
+  const { articles: latest, isLoading: latestLoading } = useArticlesClient({
+    limit: 5,
+  });
 
-  const [trending, setTrending] = useState<Article[]>([])
-  const [trendingLoading, setTrendingLoading] = useState(true)
+  const [trending, setTrending] = useState<Article[]>([]);
+  const [trendingLoading, setTrendingLoading] = useState(true);
 
   useEffect(() => {
-    getTrendingArticles(5)
+    // getTrendingArticles এখন {days?, limit?} object নেয় (আগে plain number নিত) —
+    // পুরনো getTrendingArticles(5) কল এখানে type-mismatch ছিল, ফিক্স করা হলো
+    getTrendingArticles({ limit: 5 })
       .then(setTrending)
-      .finally(() => setTrendingLoading(false))
-  }, [])
+      .finally(() => setTrendingLoading(false));
+  }, []);
 
   return (
     <aside className="rounded-lg border border-border bg-card p-4">
@@ -44,7 +48,12 @@ export function TrendingSidebar() {
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                     {idx + 1}
                   </span>
-                  <NewsCard article={article} variant="compact" showExcerpt={false} className="border-0 py-0" />
+                  <NewsCard
+                    article={article}
+                    variant="compact"
+                    showExcerpt={false}
+                    className="border-0 py-0"
+                  />
                 </li>
               ))}
             </ol>
@@ -63,7 +72,12 @@ export function TrendingSidebar() {
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                     {idx + 1}
                   </span>
-                  <NewsCard article={article} variant="compact" showExcerpt={false} className="border-0 py-0" />
+                  <NewsCard
+                    article={article}
+                    variant="compact"
+                    showExcerpt={false}
+                    className="border-0 py-0"
+                  />
                 </li>
               ))}
             </ol>
@@ -76,14 +90,22 @@ export function TrendingSidebar() {
           <Share2 className="h-4 w-4" /> সোশ্যাল মিডিয়ায় আমরা
         </h4>
         <div className="grid grid-cols-2 gap-2 text-xs">
-          <span className="rounded-md bg-secondary px-3 py-2 text-center font-medium">ফেসবুক</span>
-          <span className="rounded-md bg-secondary px-3 py-2 text-center font-medium">ইউটিউব</span>
-          <span className="rounded-md bg-secondary px-3 py-2 text-center font-medium">এক্স</span>
-          <span className="rounded-md bg-secondary px-3 py-2 text-center font-medium">ইনস্টাগ্রাম</span>
+          <span className="rounded-md bg-secondary px-3 py-2 text-center font-medium">
+            ফেসবুক
+          </span>
+          <span className="rounded-md bg-secondary px-3 py-2 text-center font-medium">
+            ইউটিউব
+          </span>
+          <span className="rounded-md bg-secondary px-3 py-2 text-center font-medium">
+            এক্স
+          </span>
+          <span className="rounded-md bg-secondary px-3 py-2 text-center font-medium">
+            ইনস্টাগ্রাম
+          </span>
         </div>
       </div>
     </aside>
-  )
+  );
 }
 
 function SidebarSkeleton() {
@@ -99,5 +121,5 @@ function SidebarSkeleton() {
         </div>
       ))}
     </div>
-  )
+  );
 }

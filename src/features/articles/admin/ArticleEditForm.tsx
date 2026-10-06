@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -178,6 +178,59 @@ export default function ArticleEditForm({ articleId }: ArticleEditFormProps) {
       mounted = false;
     };
   }, []);
+
+  /**
+   * Organize categories into hierarchy (Parent -> Subcategories)
+   */
+  const hierarchicalCategories = useMemo(() => {
+    const getParentId = (cat: Category): string | null => {
+      if (!cat.parent) return null;
+      if (typeof cat.parent === "object" && cat.parent._id) return cat.parent._id;
+      return cat.parent as string;
+    };
+
+    const parents = categories.filter((c) => getParentId(c) === null);
+    const childrenMap = new Map<string, Category[]>();
+
+    categories.forEach((cat) => {
+      const pId = getParentId(cat);
+      if (pId) {
+        if (!childrenMap.has(pId)) childrenMap.set(pId, []);
+        childrenMap.get(pId)!.push(cat);
+      }
+    });
+
+    const items: Array<{ category: Category; isChild: boolean; prefix: string }> = [];
+
+    parents.forEach((parentCat) => {
+      items.push({ category: parentCat, isChild: false, prefix: "" });
+      const children = childrenMap.get(parentCat._id) ?? [];
+      children.forEach((childCat, idx) => {
+        const isLast = idx === children.length - 1;
+        items.push({
+          category: childCat,
+          isChild: true,
+          prefix: isLast ? "└─ " : "├─ ",
+        });
+      });
+    });
+
+    // In case there are orphan subcategories
+    const allChildIds = new Set(
+      Array.from(childrenMap.values())
+        .flat()
+        .map((c) => c._id),
+    );
+    const allParentIds = new Set(parents.map((p) => p._id));
+    categories.forEach((cat) => {
+      if (!allParentIds.has(cat._id) && !allChildIds.has(cat._id)) {
+        items.push({ category: cat, isChild: true, prefix: "• " });
+      }
+    });
+
+    return items;
+  }, [categories]);
+
 
   /* ------------------------------------------------------------------------ */
   /* Set Article Data                                                         */
@@ -571,15 +624,32 @@ export default function ArticleEditForm({ articleId }: ArticleEditFormProps) {
                     />
                   </SelectTrigger>
 
-                  <SelectContent>
-                    {categories.length === 0 ? (
+                  <SelectContent className="max-h-80">
+                    {hierarchicalCategories.length === 0 ? (
                       <SelectItem value="no-category" disabled>
                         No categories found
                       </SelectItem>
                     ) : (
-                      categories.map((category) => (
-                        <SelectItem key={category._id} value={category._id}>
-                          {category.name}
+                      hierarchicalCategories.map(({ category, isChild, prefix }) => (
+                        <SelectItem
+                          key={category._id}
+                          value={category._id}
+                          className={
+                            isChild
+                              ? "pl-6 font-normal text-muted-foreground focus:text-foreground"
+                              : "font-semibold text-foreground"
+                          }
+                        >
+                          {isChild ? (
+                            <span className="flex items-center gap-1.5">
+                              <span className="font-mono text-xs opacity-50 select-none">
+                                {prefix}
+                              </span>
+                              <span>{category.name}</span>
+                            </span>
+                          ) : (
+                            category.name
+                          )}
                         </SelectItem>
                       ))
                     )}
